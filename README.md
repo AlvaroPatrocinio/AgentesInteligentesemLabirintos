@@ -8,7 +8,7 @@
 
 ## 📋 Sobre o Projeto
 
-Este projeto implementa e compara o desempenho de **5 tipos de agentes inteligentes** em ambientes de labirinto. [cite_start]O objetivo é demonstrar na prática diferentes paradigmas de Inteligência Artificial, desde reflexos simples sem memória até algoritmos de busca otimizada (A*) e aprendizado por reforço (Q-Learning)[cite: 17, 18, 24].
+Este projeto implementa e compara o desempenho de **5 tipos de agentes inteligentes** em ambientes de labirinto. O objetivo é demonstrar na prática diferentes paradigmas de Inteligência Artificial, desde reflexos simples sem memória até algoritmos de busca otimizada (A*) e aprendizado por reforço.
 
 O sistema é capaz de ler arquivos de texto representando labirintos, identificar pontos de partida e chegada, e executar baterias de testes automatizados.
 
@@ -16,26 +16,26 @@ O sistema é capaz de ler arquivos de texto representando labirintos, identifica
 
 Conforme as especificações do trabalho, foram desenvolvidos os seguintes agentes:
 
-1.  [cite_start]**Agente Reativo Simples** [cite: 19, 27]
+1.  **Agente Reativo Simples** 
     * **Lógica:** Toma decisões baseadas apenas na percepção imediata (célula atual). Escolhe aleatoriamente um vizinho válido.
     * **Limitação:** Não possui memória, podendo ficar preso em loops infinitos ou "ping-pong" entre células.
 
-2.  [cite_start]**Agente Reativo Baseado em Modelo** [cite: 20, 27]
+2.  **Agente Reativo Baseado em Modelo** 
     * **Lógica:** Mantém um estado interno (memória) das células já visitadas. Prioriza células novas para evitar loops imediatos.
     * **Melhoria:** Consegue sair de situações simples onde o agente reativo falharia, mas ainda não realiza planejamento de longo prazo.
 
-3.  [cite_start]**Agente Baseado em Objetivo (Busca Cega)** [cite: 21, 27]
+3.  **Agente Baseado em Objetivo (Busca Cega)**
     * **BFS (Busca em Largura):** Explora o labirinto em camadas. **Garante** encontrar o menor caminho possível, mas consome muita memória.
     * **DFS (Busca em Profundidade):** Explora um caminho até o fim antes de voltar (backtracking). Pode encontrar caminhos muito longos e ineficientes, mas usa menos memória.
 
-4.  [cite_start]**Agente Baseado em Utilidade (Busca Informada)** [cite: 22, 27]
+4.  **Agente Baseado em Utilidade (Busca Informada)** 
     * **Algoritmo A* (A-Star):** Utiliza uma função de avaliação $f(n) = g(n) + h(n)$, onde $g(n)$ é o custo real e $h(n)$ é a heurística.
     * **Heurísticas Implementadas:**
         * *Manhattan Distance:* Ideal para movimentos em grade (cima/baixo/esquerda/direita).
         * *Euclidean Distance:* Distância em linha reta.
         * *Weighted Manhattan:* Penaliza o custo para forçar exploração.
 
-5.  [cite_start]**Agente de Aprendizagem (Reinforcement Learning)** [cite: 23, 27]
+5.  **Agente de Aprendizagem (Reinforcement Learning)** 
     * **Algoritmo Q-Learning:** O agente não conhece o mapa inicialmente. Ele aprende explorando o ambiente através de tentativas e erros (episódios), recebendo recompensas positivas ao atingir o objetivo e negativas ao bater em paredes ou demorar muito.
 
 ## 📂 Arquivos do Projeto
@@ -48,7 +48,7 @@ A estrutura do projeto é organizada para facilidade de execução:
 
 ## 📊 Métricas de Avaliação
 
-[cite_start]O sistema avalia cada agente com base nos seguintes critérios[cite: 26, 31]:
+O sistema avalia cada agente com base nos seguintes critérios:
 
 | Métrica | Descrição | Importância |
 | :--- | :--- | :--- |
