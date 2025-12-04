@@ -192,13 +192,13 @@ class UtilityAgent:
         return [], nodes_explored
 
 class QLearningAgent:
-    def __init__(self, maze, episodes=5000): # AUMENTEI O PADRÃO PARA 5000
+    def __init__(self, maze, episodes=5000): 
         self.maze = maze
         self.episodes = episodes
         self.q_table = {}
         # Parametros ajustados para aprendizado mais estavel
         self.alpha = 0.1      # Taxa de aprendizado
-        self.gamma = 0.95     # Fator de desconto (valoriza mais o futuro)
+        self.gamma = 0.95     # Fator de desconto 
         self.epsilon = 1.0    # Exploração inicial
         self.decay = 0.999    # Decaimento MAIS LENTO para explorar mais tempo
         self.min_eps = 0.05   # Minimo de exploração
@@ -219,7 +219,7 @@ class QLearningAgent:
             steps = 0
             done = False
             
-            # Aumentei o limite de passos por episodio para ele ter chance de chegar
+
             while not done and steps < 1000:
                 if random.random() < self.epsilon:
                     act = random.randint(0, 3)
@@ -232,7 +232,7 @@ class QLearningAgent:
                 reward = -1 # Custo por passo
                 
                 if not self.maze.is_valid(nxt):
-                    reward = -5 # Punição menor por parede (para nao ter medo de andar)
+                    reward = -5 # Punição menor por parede 
                     nxt = state
                 elif nxt == self.maze.end:
                     reward = 1000 # Recompensa GRANDE para atrair o agente
@@ -332,8 +332,7 @@ def run_tests():
             
             status = "FALHOU" if len(p_ql) > 500 else "SUCESSO"
             
-            # Imprime o resultado do Q-Learning mantendo a formatação da tabela
-            # Para ficar alinhado visualmente
+            # Imprime o resultado do Q-Learning
             print(f"\n{'Q-Learning':<15} | {'TREINO':<8} | {len(p_ql):<6} | {coord_str} [{status}]")
             print("\n")
 
