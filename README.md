@@ -55,11 +55,11 @@ O sistema avalia cada agente com base nos seguintes critérios:
 | **Tempo de Execução** | Tempo total (em segundos) para encontrar a solução. | Mede a eficiência computacional do algoritmo. |
 | **Tamanho do Caminho** | Número de passos do início ao fim. | Mede a qualidade da solução (otimalidade). O BFS e o A* devem encontrar o menor caminho. |
 | **Nós Explorados** | Quantidade de células verificadas antes de achar o fim. | Indica o esforço de busca. Heurísticas melhores exploram menos nós. |
-| **Evolução (Q-Learning)** | Melhora no desempenho ao longo dos episódios. | Verifica se o agente está realmente aprendendo[cite: 30]. |
+| **Evolução (Q-Learning)** | Melhora no desempenho ao longo dos episódios. | Verifica se o agente está realmente aprendendo. |
 
 ## 🗺️ Labirintos Suportados
 
-O parser de labirintos (`Maze class`) é robusto e suporta os seguintes formatos[cite: 29]:
+O parser de labirintos (`Maze class`) é robusto e suporta os seguintes formatos:
 
 ### 1. Formato Numérico Espaçado
 Comum em arquivos como `labirinto_aleatorio.txt`:

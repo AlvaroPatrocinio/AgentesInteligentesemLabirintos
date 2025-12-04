@@ -16,11 +16,11 @@ class Maze:
         self.parse_maze(filename)
         self.rows = len(self.grid)
         self.cols = len(self.grid[0]) if self.rows > 0 else 0
-        
+
         # Se nao encontrou Inicio, define padrao (topo-esquerda)
         if self.start is None:
             self.start = self.find_valid_spot(0, 0, 1)
-            
+
         # Se nao encontrou Fim, define padrao (baixo-direita)
         if self.end is None:
             self.end = self.find_valid_spot(self.rows-1, self.cols-1, -1)
@@ -31,8 +31,8 @@ class Maze:
                 for r, line in enumerate(f):
                     raw_line = line.strip()
                     if not raw_line:
-                        continue 
-                    
+                        continue
+
                     # Detecta espaço
                     if ' ' in raw_line:
                         row_chars = raw_line.split()
@@ -52,7 +52,7 @@ class Maze:
                             self.end = (r, c)
                         else:
                             parsed_row.append(' ')
-                    
+
                     if parsed_row:
                         self.grid.append(parsed_row)
         except Exception as e:
@@ -95,7 +95,7 @@ class SimpleReflexAgent:
         path = [maze.start]
         current = maze.start
         steps = 0
-        
+
         while current != maze.end and steps < 2000:
             neighbors = maze.get_neighbors(current)
             if not neighbors: break
@@ -111,18 +111,18 @@ class ModelBasedReflexAgent:
         current = maze.start
         visited = {current}
         steps = 0
-        
+
         while current != maze.end and steps < 5000:
             neighbors = maze.get_neighbors(current)
             unvisited = [n for n in neighbors if n not in visited]
-            
+
             if unvisited:
                 current = random.choice(unvisited)
             elif neighbors:
                 current = random.choice(neighbors)
             else:
                 break
-            
+
             visited.add(current)
             path.append(current)
             steps += 1
@@ -137,20 +137,20 @@ class GoalBasedAgent:
         queue = deque([(maze.start, [maze.start])])
         visited = {maze.start}
         nodes_explored = 0
-        
+
         while queue:
             nodes_explored += 1
             if self.strategy == 'bfs':
                 vertex, path = queue.popleft()
             else:
                 vertex, path = queue.pop()
-            
+
             if vertex == maze.end:
                 return path, nodes_explored
-            
+
             neighbors = maze.get_neighbors(vertex)
             if self.strategy == 'dfs': random.shuffle(neighbors)
-                
+
             for neighbor in neighbors:
                 if neighbor not in visited:
                     visited.add(neighbor)
@@ -172,17 +172,17 @@ class UtilityAgent:
         visited = set()
         nodes_explored = 0
         g_score = {maze.start: 0}
-        
+
         while pq:
             nodes_explored += 1
             f, _, current, path = heapq.heappop(pq)
-            
+
             if current == maze.end:
                 return path, nodes_explored
-            
+
             if current in visited: continue
             visited.add(current)
-            
+
             for neighbor in maze.get_neighbors(current):
                 new_g = g_score[current] + 1
                 if neighbor not in g_score or new_g < g_score[neighbor]:
@@ -192,16 +192,17 @@ class UtilityAgent:
         return [], nodes_explored
 
 class QLearningAgent:
-    def __init__(self, maze, episodes=500):
+    def __init__(self, maze, episodes=5000): # AUMENTEI O PADRÃO PARA 5000
         self.maze = maze
         self.episodes = episodes
-        self.q_table = {} 
-        self.alpha = 0.1
-        self.gamma = 0.9
-        self.epsilon = 1.0
-        self.decay = 0.99
-        self.min_eps = 0.05
-        self.actions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        self.q_table = {}
+        # Parametros ajustados para aprendizado mais estavel
+        self.alpha = 0.1      # Taxa de aprendizado
+        self.gamma = 0.95     # Fator de desconto (valoriza mais o futuro)
+        self.epsilon = 1.0    # Exploração inicial
+        self.decay = 0.999    # Decaimento MAIS LENTO para explorar mais tempo
+        self.min_eps = 0.05   # Minimo de exploração
+        self.actions = [(-1, 0), (1, 0), (0, -1), (0, 1)] # U, D, L, R
 
     def get_q(self, state):
         if state not in self.q_table:
@@ -210,34 +211,42 @@ class QLearningAgent:
 
     def train(self):
         if not self.maze.start or not self.maze.end: return []
+        
+        print(f"   -> Treinando {self.episodes} episódios (aguarde)...")
+        
         for ep in range(self.episodes):
             state = self.maze.start
             steps = 0
             done = False
-            while not done and steps < 300:
+            
+            # Aumentei o limite de passos por episodio para ele ter chance de chegar
+            while not done and steps < 1000:
                 if random.random() < self.epsilon:
                     act = random.randint(0, 3)
                 else:
                     act = np.argmax(self.get_q(state))
-                
+
                 dr, dc = self.actions[act]
                 nxt = (state[0]+dr, state[1]+dc)
+
+                reward = -1 # Custo por passo
                 
-                reward = -1
                 if not self.maze.is_valid(nxt):
-                    reward = -10
+                    reward = -5 # Punição menor por parede (para nao ter medo de andar)
                     nxt = state
                 elif nxt == self.maze.end:
-                    reward = 100
+                    reward = 1000 # Recompensa GRANDE para atrair o agente
                     done = True
                 
+                # Atualizacao da Q-Table
                 old_q = self.get_q(state)[act]
                 next_max = np.max(self.get_q(nxt)) if not done else 0
-                self.q_table[state][act] = old_q + self.alpha*(reward + self.gamma*next_max - old_q)
+                self.q_table[state][act] = old_q + self.alpha * (reward + self.gamma * next_max - old_q)
                 
                 state = nxt
                 steps += 1
             
+            # Decaimento do Epsilon
             if self.epsilon > self.min_eps:
                 self.epsilon *= self.decay
 
@@ -245,16 +254,25 @@ class QLearningAgent:
         if not self.maze.start: return []
         path = [self.maze.start]
         curr = self.maze.start
-        for _ in range(100):
+        
+        # Tenta andar por até 500 passos
+        for _ in range(500):
             if curr == self.maze.end: break
-            act = np.argmax(self.get_q(curr))
+            
+            if curr in self.q_table:
+                act = np.argmax(self.get_q(curr))
+            else:
+                act = random.randint(0, 3)
+            
             dr, dc = self.actions[act]
             nxt = (curr[0]+dr, curr[1]+dc)
+            
             if self.maze.is_valid(nxt):
                 curr = nxt
                 path.append(curr)
             else:
-                break
+                break # Se tentar bater na parede no teste para
+                
         return path
 
 # ==========================================
@@ -266,7 +284,7 @@ def run_tests():
         "/labirinto_colmeia.txt", "/labirinto_espiral.txt",
         "/labirinto_estrela.txt", "/labirinto_onda.txt"
     ]
-    
+
     agents = [
         ("Simples", SimpleReflexAgent()),
         ("Modelo", ModelBasedReflexAgent()),
@@ -275,32 +293,50 @@ def run_tests():
         ("A*", UtilityAgent('manhattan'))
     ]
 
-    print("INICIANDO TESTES...\n")
+    print("INICIANDO TESTES COMPLETOS (Com coordenadas)...\n")
+    
     for f in files:
-        print(f"--- Labirinto: {f} ---")
+        print(f"{'='*80}")
+        print(f"LABIRINTO: {f}")
         try:
             m = Maze(f)
             if not m.grid:
                 print("Arquivo vazio ou invalido.\n")
                 continue
-                
-            print(f"Tamanho: {m.rows}x{m.cols}")
+
+            # Informações gerais no topo
+            print(f"Dimensões: {m.rows}x{m.cols}")
+            print(f"Coordenadas: Entrada {m.start}  ==>  Saída {m.end}")
+            print("-" * 80)
+
+            # 1. Tabela com Coluna Extra de Coordenadas
+            print(f"{'Agente':<15} | {'Tempo':<8} | {'Passos':<6} | {'Entrada -> Saída'}")
             
-            # Agentes Classicos
-            print(f"{'Agente':<15} | {'Tempo':<8} | {'Passos'}")
+            coord_str = f"{m.start} -> {m.end}" # String fixa para este labirinto
+            
             for name, ag in agents:
                 t0 = time.time()
                 p, ops = ag.solve(m)
                 dt = time.time() - t0
-                print(f"{name:<15} | {dt:<8.4f} | {len(p)}")
+                
+                # Imprime a linha com a nova coluna
+                print(f"{name:<15} | {dt:<8.4f} | {len(p):<6} | {coord_str}")
+
+            # 2. Q-Learning
+            print("-" * 80)
+            print("Treinando Q-Learning (5000 ep)...", end=" ") 
             
-            # Agente Q-Learning
-            print("Treinando Q-Learning...", end=" ")
-            ql = QLearningAgent(m, episodes=200)
+            ql = QLearningAgent(m, episodes=5000) 
             ql.train()
             p_ql = ql.solve_after_training()
-            print(f"Fim. Caminho: {len(p_ql)}\n")
             
+            status = "FALHOU" if len(p_ql) > 500 else "SUCESSO"
+            
+            # Imprime o resultado do Q-Learning mantendo a formatação da tabela
+            # Para ficar alinhado visualmente
+            print(f"\n{'Q-Learning':<15} | {'TREINO':<8} | {len(p_ql):<6} | {coord_str} [{status}]")
+            print("\n")
+
         except FileNotFoundError:
             print(f"ARQUIVO NAO ENCONTRADO: {f}\n")
 

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA: Resultados Finais (Todos os Labirintos)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-main: #c9d1d9;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-purple: #bc8cff;
+            --accent-red: #da3633;
+            --code-bg: #161b22;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            padding: 40px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        .content-box {
+            max-width: 1200px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        /* Tipografia */
+        h1 { font-size: 3rem; margin-bottom: 10px; color: var(--accent-blue); }
+        h2 { font-size: 2rem; color: var(--accent-purple); margin-bottom: 30px; border-bottom: 2px solid #30363d; padding-bottom: 10px; display: inline-block;}
+        p { font-size: 1.2rem; line-height: 1.6; color: #8b949e; margin-bottom: 20px; }
+        
+        /* Grid de Agentes */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .agent-card {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            transition: transform 0.3s;
+        }
+        .agent-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
+        .agent-card h3 { color: var(--accent-green); margin-top: 0; font-size: 1.1rem; }
+        .agent-card .analogy { font-size: 0.9rem; font-style: italic; color: #8b949e; margin-top: 10px; display: block; border-top: 1px solid #30363d; padding-top: 10px;}
+
+        /* Terminal Hacker */
+        .terminal {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .cmd { color: var(--accent-blue); }
+        .success { color: var(--accent-green); font-weight: bold; }
+        .fail { color: var(--accent-red); }
+        .info { color: #8b949e; }
+        .terminal::-webkit-scrollbar { width: 10px; }
+        .terminal::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+
+        /* Código Python */
+        pre {
+            text-align: left;
+            border-radius: 8px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        code { font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        /* Área do Gráfico e Botões */
+        .chart-wrapper {
+            background: rgba(22, 27, 34, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            height: 450px;
+            width: 90%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .chart-btn {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .chart-btn:hover, .chart-btn.active {
+            background: var(--accent-blue);
+            color: #0d1117;
+            font-weight: bold;
+        }
+
+        /* Botões Navegação Slide */
+        .nav-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            background: #21262d;
+            color: var(--accent-blue);
+            border: 1px solid #30363d;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn:hover { background: #30363d; }
+    </style>
+</head>
+<body>
+
+    <div class="slide active">
+        <div class="content-box">
+            <h1>Agentes Inteligentes em Labirintos</h1>
+            <p style="font-size: 1.5rem; color: var(--accent-green);">Comparativo: Busca vs. Aprendizagem</p>
+            <div style="margin: 40px auto; width: 100px; height: 5px; background: var(--accent-blue);"></div>
+            <p><strong>Integrantes:</strong> Álvaro Patrocínio</p>
+            <p><strong>Disciplina:</strong> Inteligência Artificial</p>
+            <br>
+            <small style="color: #484f58;">Use as setas ⬅ ➡ do teclado para navegar</small>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h2>Quem são os Agentes?</h2>
+            <p>Implementamos 4 paradigmas diferentes de inteligência:</p>
+            
+            <div class="agent-grid">
+                <div class="agent-card">
+                    <h3>1. Reativo Simples</h3>
+                    <p>Sem memória. Escolhe movimentos aleatórios.</p>
+                    <span class="analogy">🪳 Analogia: Uma barata correndo sem direção.</span>
+                </div>
+                <div class="agent-card">
+                    <h3>2. Busca em Largura (BFS)</h3>
+                    <p>Explora todas as direções camada por camada. Garante o menor caminho.</p>
+                    <span class="analogy">💧 Analogia: Água se espalhando no chão.</span>
+                </div>
+                <div class="agent-card">
+                    <h3>3. Algoritmo A* (A-Star)</h3>
+                    <p>Usa heurística matemática (distância) para ir direto ao alvo.</p>
+                    <span class="analogy">📍 Analogia: GPS / Waze (Calcula a melhor rota).</span>
+                </div>
+                <div class="agent-card">
+                    <h3>4. Q-Learning (Aprendizado)</h3>
+                    <p>Aprende por tentativa e erro (recompensas). Começa errando, termina "expert".</p>
+                    <span class="analogy">🐕 Analogia: Adestrar um cachorro com petiscos.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h2>O Ambiente (Maze)</h2>
+            <p>Lê arquivos <code>.txt</code> e converte em matriz. Identifica Paredes (#), Início (S) e Fim (E).</p>
+            <div style="display: flex; gap: 20px; align-items: start; text-align: left;">
+                <pre style="flex: 1;"><code class="language-python">
+def parse_maze(self, filename):
+    with open(filename, 'r') as f:
+        for line in f:
+            # Detecta estrutura do arquivo
+            if '1' in line: row.append('#') # Parede
+            if '2' in line: self.start = (r,c)
+            if '3' in line: self.end = (r,c)
+                </code></pre>
+                <div style="flex: 1; padding-top: 20px;">
+                    <p>O código é robusto para ler diferentes formatos de labirinto (espaçados ou compactos).</p>
+                    <p>Isso permitiu testar cenários variados como: <strong>Colmeia</strong>, <strong>Espiral</strong> e <strong>Aleatórios</strong>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h2>O Código: Q-Learning</h2>
+            <p>Implementação da <strong>Equação de Bellman</strong>.</p>
+            <pre><code class="language-python">
+def train(self):
+    # Treina por 5.000 episódios
+    for ep in range(5000): 
+        state = start
+        while not done:
+            # Sistema de Recompensas
+            if hit_wall: reward = -5    # Punição por bater
+            if goal:     reward = +1000 # Recompensa máxima!
+            
+            # Atualiza a Memória (Q-Table)
+            new_q = old_q + alpha * (reward + gamma * next_max - old_q)
+            </code></pre>
+            <p style="color: var(--accent-green);">Resultado: O agente sai de 2000 passos (aleatório) para o caminho ótimo (ex: 97 passos) após o treino.</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h2>Log de Execução Real</h2>
+            <p>Dados extraídos diretamente do Python. Role para ver todos os labirintos.</p>
+            <div class="terminal">
+<span class="info">INICIANDO TESTES COMPLETOS (Com coordenadas)...</span>
+
+================================================================================
+LABIRINTO: /labirinto_aleatorio.txt (21x21)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+Simples         | 0.0042   | 2001   | <span class="fail">FALHOU (Loop)</span>
+Modelo          | 0.0047   | 1783   | (0, 1) -> (19, 0)
+BFS (Largura)   | 0.0004   | 97     | <span class="success">ÓTIMO (97)</span>
+DFS (Profund.)  | 0.0006   | 97     | (0, 1) -> (19, 0)
+A* (A-Star)     | 0.0004   | 97     | <span class="success">ÓTIMO (97)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 97     | <span class="success">SUCESSO (97 Passos)</span>
+
+
+================================================================================
+LABIRINTO: /labirinto_aleatorio_2.txt (21x21)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+Simples         | 0.0033   | 2001   | <span class="fail">FALHOU</span>
+Modelo          | 0.0005   | 214    | (1, 0) -> (19, 1)
+BFS (Largura)   | 0.0003   | 96     | <span class="success">ÓTIMO (96)</span>
+A* (A-Star)     | 0.0003   | 96     | <span class="success">ÓTIMO (96)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 96     | <span class="success">SUCESSO (96 Passos)</span>
+
+
+================================================================================
+LABIRINTO: /labirinto_colmeia.txt (25x26)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+Simples         | 0.0033   | 2001   | <span class="fail">FALHOU</span>
+Modelo          | 0.0054   | 2470   | <span class="fail">RUIM</span>
+BFS (Largura)   | 0.0009   | 48     | <span class="success">ÓTIMO (48)</span>
+DFS (Profund.)  | 0.0006   | 124    | (1, 0) -> (24, 24)
+A* (A-Star)     | 0.0007   | 48     | <span class="success">ÓTIMO (48)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 48     | <span class="success">SUCESSO (48 Passos)</span>
+
+
+================================================================================
+LABIRINTO: /labirinto_espiral.txt (23x25)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+Simples         | 0.0034   | 2001   | <span class="fail">FALHOU</span>
+Modelo          | 0.0005   | 264    | (22, 23) -> (11, 11)
+BFS (Largura)   | 0.0006   | 264    | <span class="success">ÓTIMO (264)</span>
+A* (A-Star)     | 0.0007   | 264    | <span class="success">ÓTIMO (264)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 264    | <span class="success">SUCESSO (264 Passos)</span>
+
+
+================================================================================
+LABIRINTO: /labirinto_estrela.txt (25x26)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+BFS (Largura)   | 0.0007   | 74     | <span class="success">ÓTIMO (74)</span>
+DFS (Profund.)  | 0.0005   | 110    | (0, 1) -> (23, 1)
+A* (A-Star)     | 0.0009   | 74     | <span class="success">ÓTIMO (74)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 74     | <span class="success">SUCESSO (74 Passos)</span>
+
+
+================================================================================
+LABIRINTO: /labirinto_onda.txt (23x26)
+--------------------------------------------------------------------------------
+Agente          | Tempo    | Passos | Entrada -> Saída
+BFS (Largura)   | 0.0007   | 45     | <span class="success">ÓTIMO (45)</span>
+DFS (Profund.)  | 0.0006   | 123    | (0, 2) -> (22, 24)
+A* (A-Star)     | 0.0004   | 45     | <span class="success">ÓTIMO (45)</span>
+--------------------------------------------------------------------------------
+<span class="cmd">Treinando Q-Learning (5000 ep)...    -> Treinando...</span>
+Q-Learning      | TREINO   | 45     | <span class="success">SUCESSO (45 Passos)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h2>Análise de Eficiência (Nº de Passos)</h2>
+            <p>Clique nos botões abaixo para ver o desempenho em cada labirinto:</p>
+            
+            <div class="chart-wrapper">
+                <div class="chart-buttons">
+                    <button class="chart-btn active" onclick="updateChart('aleatorio')">Aleatório 1</button>
+                    <button class="chart-btn" onclick="updateChart('aleatorio2')">Aleatório 2</button>
+                    <button class="chart-btn" onclick="updateChart('colmeia')">Colmeia</button>
+                    <button class="chart-btn" onclick="updateChart('espiral')">Espiral</button>
+                    <button class="chart-btn" onclick="updateChart('estrela')">Estrela</button>
+                    <button class="chart-btn" onclick="updateChart('onda')">Onda</button>
+                </div>
+                <div style="flex-grow:1; position:relative;">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+            <p style="margin-top:10px; font-size: 0.9rem;">*Nota: 2001 passos indica falha (limite de segurança).</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="content-box">
+            <h1>Conclusão Final</h1>
+            <div style="text-align: left; margin: 0 auto; max-width: 800px; margin-top: 40px;">
+                <p>✅ <strong>Algoritmo A* (A-Star):</strong> Vencedor em eficiência computacional. Ideal para mapas conhecidos.</p>
+                <p>✅ <strong>Q-Learning:</strong> Provou sua capacidade de adaptação. Mesmo sem conhecer o mapa, encontrou o caminho ótimo (igual ao A*) após o treinamento.</p>
+                <p>⚠️ <strong>Busca em Profundidade (DFS):</strong> Rápida, mas instável. No labirinto "Onda", fez 123 passos contra 45 do BFS.</p>
+                <p>❌ <strong>Agentes Reativos:</strong> Totalmente ineficazes em labirintos complexos.</p>
+            </div>
+            <br><br>
+            <h2 style="border:none;">Obrigado! 🚀</h2>
+        </div>
+    </div>
+
+    <div class="nav-controls">
+        <button class="btn" onclick="prevSlide()">❮ Anterior</button>
+        <button class="btn" onclick="nextSlide()">Próximo ❯</button>
+    </div>
+
+    <script>
+        // 1. Highlight Syntax
+        hljs.highlightAll();
+
+        // 2. Navegação de Slides
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) slide.classList.add('active');
+            });
+        }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; showSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.code === 'Space') { e.preventDefault(); nextSlide(); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+
+        // 3. Dados dos Gráficos (Seus resultados reais)
+        const mazeData = {
+            'aleatorio':  [2001, 1783, 97, 97, 97, 97],
+            'aleatorio2': [2001, 214, 96, 96, 96, 96],
+            'colmeia':    [2001, 2470, 124, 48, 48, 48],
+            'espiral':    [2001, 264, 264, 264, 264, 264], // Espiral só tem 1 caminho, todos empatam
+            'estrela':    [2001, 2252, 110, 74, 74, 74],
+            'onda':       [2001, 2139, 123, 45, 45, 45]
+        };
+
+        const labels = ['Simples', 'Modelo', 'DFS (Profund.)', 'BFS (Largura)', 'A* (A-Star)', 'Q-Learning'];
+        let myChart = null;
+
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Número de Passos',
+                        data: mazeData['aleatorio'],
+                        backgroundColor: [
+                            'rgba(218, 54, 51, 0.7)',
+                            'rgba(218, 54, 51, 0.4)',
+                            'rgba(88, 166, 255, 0.5)',
+                            'rgba(88, 166, 255, 0.8)',
+                            'rgba(46, 160, 67, 0.8)',
+                            'rgba(63, 185, 80, 0.8)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+                        x: { ticks: { color: '#c9d1d9', font: {size: 11} } }
+                    }
+                }
+            });
+        }
+
+        // Função para trocar o gráfico ao clicar no botão
+        function updateChart(key) {
+            // Atualiza botões
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Atualiza dados
+            myChart.data.datasets[0].data = mazeData[key];
+            myChart.update();
+        }
+
+        // Inicia o gráfico
+        initChart();
+    </script>
+</body>
+</html>
